@@ -5,18 +5,16 @@ public class Particle {
     private int id;
     private double x;
     private double y;
-    private double vx;
-    private double vy;
+    private double theta;
     private double radius;
     private double property;
     private Set<Particle> neighbours;
 
-    public Particle(int id, double x, double y, double vx, double vy, double radius, double property) {
+    public Particle(int id, double x, double y, double theta, double radius, double property) {
         this.id = id;
         this.x = x;
         this.y = y;
-        this.vx = vx;
-        this.vy = vy;
+        this.theta = theta;
         this.radius = radius;
         this.property = property;
         this.neighbours = new HashSet<>();
@@ -34,12 +32,8 @@ public class Particle {
         return y;
     }
 
-    public double getVx() {
-        return vx;
-    }
-
-    public double getVy() {
-        return vy;
+    public double getTheta() {
+        return theta;
     }
 
     public double getRadius() {
@@ -64,6 +58,10 @@ public class Particle {
 
     public void setY(double y) {
         this.y = y;
+    }
+
+    public void setTheta(double theta) {
+        this.theta = theta;
     }
 
     public void setRadius(double radius) {

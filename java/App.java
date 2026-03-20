@@ -20,16 +20,17 @@ public class App {
         int M = Integer.parseInt(args[2]);
         double rc = Double.parseDouble(args[3]);
         boolean periodic = Boolean.parseBoolean(args[4]);
+        int iterations = Integer.parseInt(args[5]);
+        double eta = Double.parseDouble(args[6]);
+        boolean circleLeader = false;
+        int leaderID = 0;
+        
+        if(args.length > 7){
+            leaderID = Integer.parseInt(args[7]);
+        }
 
-
-        int iterations = 10000;
-        double eta = 0.1;
-
-        if (args.length >= 7) {
-            iterations = Integer.parseInt(args[5]);
-            eta = Double.parseDouble(args[6]);
-        } else if (args.length == 6) {
-            iterations = Integer.parseInt(args[5]);
+        if(args.length > 8){
+            circleLeader = Boolean.parseBoolean(args[8]);
         }
 
         ArrayList<Particle> particles = new ArrayList<>();
@@ -86,7 +87,11 @@ public class App {
                     }
                 } while (overlaps);
 
-                particles.add(new Particle(i, rx, ry, theta, radius, property));
+                if(i == leaderID){
+                    particles.add(new Particle(i, rx, ry, theta, radius, property, true));
+                } else {
+                    particles.add(new Particle(i, rx, ry, theta, radius, property, false));
+                }
             }
         } else {
             System.out.println("Running in File Mode...");
@@ -110,10 +115,10 @@ public class App {
 
                     double rx = Double.parseDouble(dynamicParts[0]);
                     double ry = Double.parseDouble(dynamicParts[1]);
-                    double theta =  0.0;
+                    double theta =  Double.parseDouble(dynamicParts[2]);//TODO, por ahora no existe en los archivos
 
                     //en este caso no se hacen todos los chequeos como en el anterior porq se asume q los archivos son correctos TODO
-                    particles.add(new Particle(i, rx, ry, theta, radius, property));
+                    particles.add(new Particle(i, rx, ry, theta, radius, property, false));
                 }
 
                 staticScanner.close();
@@ -133,11 +138,8 @@ public class App {
             System.exit(1);
         }
 
-        // Ejecuta Cell Index Method para calcular los vecinos
+        //Ejecuta Cell Index Method para calcular los vecinos
         automataCelular(particles, L, M, rc, periodic, iterations, eta);
-
-        // Ya no hace falta exportData() si lo hacemos frame a frame dentro del loop, 
-        // o lo podemos remover de aquí si se exporta durante las iteraciones.
     }
 
     public static void automataCelular(ArrayList<Particle> particles, double L, int M, double rc, boolean periodic, int iterations, double eta) {
@@ -152,12 +154,17 @@ public class App {
 
             // 2. Calculate next theta for all particles
             for (Particle p : particles) {
+                if(p.isLeader()){
+                    continue;
+                }
                 p.calculateNextTheta(eta, rand);
             }
 
             // 3. Update theta and positions
             for (Particle p : particles) {
-                p.updateTheta();
+                if(!p.isLeader()){
+                    p.updateTheta();
+                }
                 p.updatePosition(L, periodic);
             }
 
@@ -287,7 +294,8 @@ public class App {
             writer.write("Frame " + t + "\n");
             // Format for ovito or custom visualization
             for (Particle p : particles) {
-                writer.write(p.getId() + " " + p.getX() + " " + p.getY() + " " + Math.cos(p.getTheta()) * Particle.VELOCITY + " " + Math.sin(p.getTheta()) * Particle.VELOCITY + " " + p.getRadius() + "\n");
+                int leaderFlag = p.isLeader() ? 1 : 0;
+                writer.write(p.getId() + " " + p.getX() + " " + p.getY() + " " + Math.cos(p.getTheta()) * Particle.VELOCITY + " " + Math.sin(p.getTheta()) * Particle.VELOCITY + " " + p.getRadius() + " " + leaderFlag + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();

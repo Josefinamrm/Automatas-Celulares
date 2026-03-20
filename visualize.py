@@ -28,7 +28,10 @@ def read_frames(filepath):
                         vx = float(parts[3])
                         vy = float(parts[4])
                         radius = float(parts[5])
-                        frame_data.append([x, y, vx, vy, radius])
+                        is_leader = False
+                        if len(parts) >= 7:
+                            is_leader = bool(int(parts[6]))
+                        frame_data.append([x, y, vx, vy, radius, 1 if is_leader else 0])
                 if frame_data:
                     frames.append(np.array(frame_data))
     except FileNotFoundError:
@@ -61,7 +64,8 @@ ax.set_title("Off-Lattice Automata")
 # Initialize with first frame to avoid length mismatch issues in matplotlib Quirver
 init_data = frames[0]
 
-scatter = ax.scatter(init_data[:, 0], init_data[:, 1], s=30, color='red', zorder=2)
+colors = ['blue' if c == 1 else 'red' for c in init_data[:, 5]]
+scatter = ax.scatter(init_data[:, 0], init_data[:, 1], s=30, color=colors, zorder=2)
 quiver = ax.quiver(init_data[:, 0], init_data[:, 1], init_data[:, 2]*10, init_data[:, 3]*10, color='black', scale=1.0, scale_units='xy', angles='xy', headwidth=3, headlength=4, zorder=1)
 
 def init():
@@ -73,9 +77,11 @@ def update(frame_idx):
     y = data[:, 1]
     vx = data[:, 2]
     vy = data[:, 3]
+    is_leader = data[:, 5]
     
     offsets = np.c_[x, y]
     scatter.set_offsets(offsets)
+    scatter.set_color(['blue' if c == 1 else 'red' for c in is_leader])
     quiver.set_offsets(offsets)
     # The arrow should have length proportional to velocity.
     # We multiply by a large factor just to make the arrows visible if velocity is small (0.03).

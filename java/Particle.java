@@ -11,8 +11,9 @@ public class Particle {
     private double property;
     private Set<Particle> neighbours;
     private double nextTheta;
+    private boolean isLeader;
 
-    public Particle(int id, double x, double y, double theta, double radius, double property) {
+    public Particle(int id, double x, double y, double theta, double radius, double property, boolean isLeader) {
         this.id = id;
         this.x = x;
         this.y = y;
@@ -21,6 +22,7 @@ public class Particle {
         this.property = property;
         this.neighbours = new HashSet<>();
         this.nextTheta = theta;
+        this.isLeader = isLeader;
     }
 
     public void updatePosition(double L, boolean periodic){
@@ -41,6 +43,7 @@ public class Particle {
             sinSum += Math.sin(p.getTheta());
             cosSum += Math.cos(p.getTheta());
         }
+
 
         double avgTheta = Math.atan2(sinSum, cosSum);
         double noise = (rand.nextDouble() - 0.5) * eta;
@@ -109,5 +112,9 @@ public class Particle {
 
     public void clearNeighbours() {
         this.neighbours.clear();
+    }
+
+    public boolean isLeader() {
+        return isLeader;
     }
 }

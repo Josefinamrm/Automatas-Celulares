@@ -11,8 +11,8 @@ public class App {
     public static void main(String[] args) {
         
         if (args.length < 5) {
-            System.err.println("HELP (File Mode): java -cp src App <StaticPath> <DynamicPath> <M> <rc> <periodic (true/false)>");
-            System.err.println("HELP (Random Mode): java -cp src App <N> <L> <M> <rc> <periodic (true/false)>");
+            System.err.println("HELP (File Mode): java -cp src App <StaticPath> <DynamicPath> <M> <rc> <periodic (true/false)> [iterations] [eta]");
+            System.err.println("HELP (Random Mode): java -cp src App <N> <L> <M> <rc> <periodic (true/false)> [iterations] [eta]");
             System.exit(1);
         }
 
@@ -20,13 +20,16 @@ public class App {
         int M = Integer.parseInt(args[2]);
         double rc = Double.parseDouble(args[3]);
         boolean periodic = Boolean.parseBoolean(args[4]);
-        int targetId = -1;
-        boolean hasTarget = args.length >= 6;
 
-        //en principio esto está deprecated porq ahora esta separado lo del target, 
-        // pero lo dejamos por si vuelve a ser util en el futuro 
-        if (hasTarget) { 
-            targetId = Integer.parseInt(args[5]);
+
+        int iterations = 10000;
+        double eta = 0.1;
+
+        if (args.length >= 7) {
+            iterations = Integer.parseInt(args[5]);
+            eta = Double.parseDouble(args[6]);
+        } else if (args.length == 6) {
+            iterations = Integer.parseInt(args[5]);
         }
 
         ArrayList<Particle> particles = new ArrayList<>();
@@ -49,6 +52,7 @@ public class App {
             double r_min = 0.23;
             double r_max = 0.26;
             double property = 1.0;
+            double theta = 0.0;
             java.util.Random rand = new java.util.Random();
 
             //le inventamos posiciones y radios a las N partículas q pedimos, chequeando que no se superpongan entre si.
@@ -61,6 +65,7 @@ public class App {
                     rx = rand.nextDouble() * L;
                     ry = rand.nextDouble() * L;
                     radius = r_min + rand.nextDouble() * (r_max - r_min);
+                    theta = rand.nextDouble() * 2 * Math.PI;
 
                     for (Particle p : particles) {
                         double dx = Math.abs(rx - p.getX());
@@ -81,7 +86,7 @@ public class App {
                     }
                 } while (overlaps);
 
-                particles.add(new Particle(i, rx, ry, 0.0, radius, property));
+                particles.add(new Particle(i, rx, ry, theta, radius, property));
             }
         } else {
             System.out.println("Running in File Mode...");
@@ -129,19 +134,37 @@ public class App {
         }
 
         // Ejecuta Cell Index Method para calcular los vecinos
-        automataCelular();
+        automataCelular(particles, L, M, rc, periodic, iterations, eta);
 
-        // Exportar data para visualize.py 
-        exportData(N, L, M, targetId, hasTarget, particles);
+        // Ya no hace falta exportData() si lo hacemos frame a frame dentro del loop, 
+        // o lo podemos remover de aquí si se exporta durante las iteraciones.
     }
 
+    public static void automataCelular(ArrayList<Particle> particles, double L, int M, double rc, boolean periodic, int iterations, double eta) {
+        java.util.Random rand = new java.util.Random();
+        System.out.println("Starting simulation for " + iterations + " iterations...");
 
-    public static void automataCelular() {
-        //definir el movimiento de las particulas
-        //si es necesario definir la lider
-        //cada t tiempo calcular cellIndexMethod y actualizar las velocidades y direcciones
+        exportFrame(0, particles, L); // Exportamos el estado inicial verdadero
 
-        
+        for (int t = 1; t <= iterations; t++) {
+            // 1. Calculate neighbours
+            cellIndexMethod(particles, L, M, rc, periodic);
+
+            // 2. Calculate next theta for all particles
+            for (Particle p : particles) {
+                p.calculateNextTheta(eta, rand);
+            }
+
+            // 3. Update theta and positions
+            for (Particle p : particles) {
+                p.updateTheta();
+                p.updatePosition(L, periodic);
+            }
+
+            // Export frame (append to particles.txt or generate a file per frame)
+            exportFrame(t, particles, L);
+        }
+        System.out.println("Simulation finished.");
     }
 
     public static double getDistance(Particle p1, Particle p2, double L, boolean periodic) {
@@ -258,46 +281,14 @@ public class App {
         return diff;
     }
 
-    private static void exportData(int N, double L, int M, int targetId, boolean hasTarget, ArrayList<Particle> particles) {
-        // Exporte en el formato especifico TP: [id n1 n2 ...]
-        try (FileWriter outWriter = new FileWriter("../output.txt")) {
+    private static void exportFrame(int t, ArrayList<Particle> particles, double L) {
+        try (FileWriter writer = new FileWriter("../particles_frames.txt", true)) {
+            writer.write(particles.size() + "\n");
+            writer.write("Frame " + t + "\n");
+            // Format for ovito or custom visualization
             for (Particle p : particles) {
-                outWriter.write("[" + p.getId());
-                for (Particle n : p.getNeighbours()) {
-                    outWriter.write(" " + n.getId());
-                }
-                outWriter.write("]\n");
+                writer.write(p.getId() + " " + p.getX() + " " + p.getY() + " " + Math.cos(p.getTheta()) * Particle.VELOCITY + " " + Math.sin(p.getTheta()) * Particle.VELOCITY + " " + p.getRadius() + "\n");
             }
-            System.out.println("Exported neighbor list to output.txt");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        // Export data para visualize.py
-        try (FileWriter writer = new FileWriter("../particles.txt")) {
-            writer.write(N + "\n");
-            writer.write(L + "\n");
-            writer.write(M + "\n");
-            // if no target was requested, write -1 as placeholder
-            writer.write((hasTarget ? targetId : -1) + "\n");
-            for (Particle p : particles) {
-                writer.write(p.getId() + " " + p.getX() + " " + p.getY() + " " + p.getRadius() + " " + p.getProperty()
-                        + "\n");
-            }
-
-            if (hasTarget) {
-                Particle target = particles.stream().filter(p -> p.getId() == targetId).findFirst().orElse(null);
-                if (target != null) {
-                    writer.write("TARGET " + targetId + "\n");
-                    writer.write("NEIGHBORS");
-                    for (Particle n : target.getNeighbours()) {
-                        writer.write(" " + n.getId());
-                    }
-                    writer.write("\n");
-                }
-            }
-
-            System.out.println("Exported particle data for visualization to particles.txt");
         } catch (IOException e) {
             e.printStackTrace();
         }

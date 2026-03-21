@@ -1,6 +1,12 @@
 rm -rf particles_frames.txt
 cd java
-javac -cp *.java
-java App 100 10 5 1 true 500 1 0
+javac *.java
+#java App <N> <L> <M> <rc> <periodic> <iterations> <eta> <leaderID> <circleLeader>
+java App 100 10 5 1 true 500 0.0 0 true
 cd ..
-python3 visualize.py
+if [ "$1" == "T" ]; then
+    rm -rf output.gif
+    python3 vis_thom.py
+else
+    python3 visualize.py
+fi

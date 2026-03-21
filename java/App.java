@@ -139,10 +139,10 @@ public class App {
         }
 
         //Ejecuta Cell Index Method para calcular los vecinos
-        automataCelular(particles, L, M, rc, periodic, iterations, eta);
+        automataCelular(particles, L, M, rc, periodic, iterations, eta, circleLeader);
     }
 
-    public static void automataCelular(ArrayList<Particle> particles, double L, int M, double rc, boolean periodic, int iterations, double eta) {
+    public static void automataCelular(ArrayList<Particle> particles, double L, int M, double rc, boolean periodic, int iterations, double eta, boolean circleLeader) {
         java.util.Random rand = new java.util.Random();
         System.out.println("Starting simulation for " + iterations + " iterations...");
 
@@ -155,6 +155,11 @@ public class App {
             // 2. Calculate next theta for all particles
             for (Particle p : particles) {
                 if(p.isLeader()){
+                    if(circleLeader){
+                        p.setTheta(Math.atan2(p.getY() - L/2, p.getX() - L/2) + Math.PI/2);
+                    } else {
+                        p.setTheta(Math.atan2(p.getY() - L/2, p.getX() - L/2));
+                    }
                     continue;
                 }
                 p.calculateNextTheta(eta, rand);

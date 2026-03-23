@@ -88,7 +88,7 @@ public class App {
                 } while (overlaps);
 
                 if(i == leaderID){
-                    particles.add(new Particle(i, rx, ry, theta, radius, property, true));
+                    particles.add(new ParticleLeader(i, rx, ry, theta, radius, property, true));
                 } else {
                     particles.add(new Particle(i, rx, ry, theta, radius, property, false));
                 }
@@ -154,22 +154,12 @@ public class App {
 
             // 2. Calculate next theta for all particles
             for (Particle p : particles) {
-                if(p.isLeader()){
-                    if(circleLeader){
-                        p.setTheta(Math.atan2(p.getY() - L/2, p.getX() - L/2) + Math.PI/2);
-                    } else {
-                        p.setTheta(Math.atan2(p.getY() - L/2, p.getX() - L/2));
-                    }
-                    continue;
-                }
                 p.calculateNextTheta(eta, rand);
             }
 
             // 3. Update theta and positions
             for (Particle p : particles) {
-                if(!p.isLeader()){
-                    p.updateTheta();
-                }
+                p.updateTheta();
                 p.updatePosition(L, periodic);
             }
 

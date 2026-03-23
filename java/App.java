@@ -156,7 +156,18 @@ public class App {
             for (Particle p : particles) {
                 if(p.isLeader()){
                     if(circleLeader){
-                        p.setTheta(Math.atan2(p.getY() - L/2, p.getX() - L/2) + Math.PI/2);
+                        double R = 5.0;
+                        double v = 0.03; // same speed as other particles (your simulation's speed)
+                        double omega = v / R; // angular velocity: v = omega * R
+
+                        // increment the angle over time
+                        double currentTheta = Math.atan2(p.getY() - 2.5, p.getX() - 6);
+                        double newTheta = currentTheta + omega; // advance angle by omega each step
+
+                        // update position along the circle
+                        p.setX(6 + R * Math.cos(newTheta));
+                        p.setY(2.5 + R * Math.sin(newTheta));
+                        p.setTheta(newTheta + Math.PI / 2);
                     } else {
                         p.setTheta(Math.atan2(p.getY() - L/2, p.getX() - L/2));
                     }

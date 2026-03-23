@@ -1,4 +1,4 @@
-rm -rf particles_frames.txt
+rm -rf particles_frames.txt va_vs_time.png
 cd java
 javac *.java
 #java App <N> <L> <M> <rc> <periodic> <iterations> <eta> <leaderID> <circleLeader>
@@ -10,3 +10,4 @@ if [ "$1" == "T" ]; then
 else
     python3 visualize.py
 fi
+python3 plot_va.py

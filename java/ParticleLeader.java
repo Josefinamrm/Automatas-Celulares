@@ -5,9 +5,11 @@ public class ParticleLeader extends Particle {
     private static final double ORBIT_SPEED = 0.006; // radians per step
 
     private double orbitAngle = 0.0;
+    private boolean circleLeader;
 
-    public ParticleLeader(int id, double x, double y, double theta, double radius, double property, boolean isLeader) {
+    public ParticleLeader(int id, double x, double y, double theta, double radius, double property, boolean isLeader, boolean circleLeader) {
         super(id, x, y, theta, radius, property, isLeader);
+        this.circleLeader = circleLeader;
     }
 
     @Override
@@ -17,20 +19,24 @@ public class ParticleLeader extends Particle {
 
     @Override
     public void updatePosition(double L, boolean periodic) {
-        orbitAngle += ORBIT_SPEED;
+        if (circleLeader) {
+            orbitAngle += ORBIT_SPEED;
 
-        double newX = CENTER_X + ORBIT_RADIUS * Math.cos(orbitAngle);
-        double newY = CENTER_Y + ORBIT_RADIUS * Math.sin(orbitAngle);
+            double newX = CENTER_X + ORBIT_RADIUS * Math.cos(orbitAngle);
+            double newY = CENTER_Y + ORBIT_RADIUS * Math.sin(orbitAngle);
 
-        // Update the velocity vector direction for exportFrame (tangent to orbit)
-        setTheta(orbitAngle + Math.PI / 2);
+            // Update the velocity vector direction for exportFrame (tangent to orbit)
+            setTheta(orbitAngle + Math.PI / 2);
 
-        if (periodic) {
-            newX = ((newX % L) + L) % L;
-            newY = ((newY % L) + L) % L;
+            if (periodic) {
+                newX = ((newX % L) + L) % L;
+                newY = ((newY % L) + L) % L;
+            }
+
+            setX(newX);
+            setY(newY);
+        } else {
+            super.updatePosition(L, periodic);
         }
-
-        setX(newX);
-        setY(newY);
     }
 }

@@ -22,15 +22,20 @@ public class App {
         boolean periodic = Boolean.parseBoolean(args[4]);
         int iterations = Integer.parseInt(args[5]);
         double eta = Double.parseDouble(args[6]);
+        boolean hasLeader = true;
         boolean circleLeader = false;
         int leaderID = 0;
-        
+
         if(args.length > 7){
-            leaderID = Integer.parseInt(args[7]);
+            hasLeader = Boolean.parseBoolean(args[7]);
+        }
+        
+        if(args.length > 8){
+            leaderID = Integer.parseInt(args[8]);
         }
 
-        if(args.length > 8){
-            circleLeader = Boolean.parseBoolean(args[8]);
+        if(args.length > 9){
+            circleLeader = Boolean.parseBoolean(args[9]);
         }
 
         ArrayList<Particle> particles = new ArrayList<>();
@@ -60,6 +65,7 @@ public class App {
             for (int i = 0; i < N; i++) {
                 boolean overlaps;
                 double rx, ry, radius;
+                int attempts = 0;
 
                 do {
                     overlaps = false;
@@ -85,10 +91,11 @@ public class App {
                             break;
                         }
                     }
-                } while (overlaps);
+                    attempts++;
+                } while (overlaps && attempts < 10000);
 
-                if(i == leaderID){
-                    particles.add(new ParticleLeader(i, rx, ry, theta, radius, property, true));
+                if(hasLeader && i == leaderID){
+                    particles.add(new ParticleLeader(i, rx, ry, theta, radius, property, true, circleLeader));
                 } else {
                     particles.add(new Particle(i, rx, ry, theta, radius, property, false));
                 }

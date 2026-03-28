@@ -3,3 +3,4 @@ java/*.txt
 /*.txt
 *.png
 *.gif
+**/particles_frames.txt

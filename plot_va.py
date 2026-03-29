@@ -41,6 +41,12 @@ def read_frames(filepath):
     return va_list
 
 def main():
+    if len(sys.argv) < 2:
+        print("Usage: python script.py <stationary_start_index>")
+        sys.exit(1)
+
+    stationary_start = int(sys.argv[1])
+
     filepath = 'particles_frames.txt'
     va_list = read_frames(filepath)
 
@@ -48,44 +54,50 @@ def main():
         print("No data.")
         sys.exit(1)
 
+    if stationary_start >= len(va_list):
+        print("Error: stationary index out of range.")
+        sys.exit(1)
+
+    # Promedio desde estacionario
+    va_stationary = va_list[stationary_start:]
+    mean_va = np.mean(va_stationary)
+
+    print(f"Stationary starts at iteration: {stationary_start}")
+    print(f"Mean v_a (stationary): {mean_va:.4f}")
+
     plt.figure(figsize=(10, 6))
-    plt.plot(range(len(va_list)), va_list, label='v_a', linewidth=1)
-    plt.xlabel('Iterations')
-    plt.ylabel('Order Parameter (v_a)')
+
+    # Serie principal (adelante)
+    plt.plot(range(len(va_list)), va_list, label='v_a', linewidth=1, zorder=2)
+
+    # Línea vertical (opcional adelante también)
+    plt.axvline(x=stationary_start, color='red', linestyle='--',
+                label=f'Estacionario en t={stationary_start}', zorder=3)
+
+    # Promedio (atrás)
+    plt.axhline(mean_va, linestyle='--', linewidth=2,
+                color='lightgreen',
+                label=f'v_a promedio = {mean_va:.3f}',
+                zorder=1)
+    
+
+    plt.xlabel('Tiempo')
+    plt.ylabel('Polarización (v_a)')
     plt.title('Order Parameter vs Time')
     plt.grid(True)
 
-    # Simple moving average to find when it stops growing/decreasing
-    window_size = 50
-    if len(va_list) > window_size:
-        va_array = np.array(va_list)
-        moving_avg = np.convolve(va_array, np.ones(window_size)/window_size, mode='valid')
-        
-        # Look at the derivative of the moving average
-        deriv = np.diff(moving_avg)
-        
-        # Find when derivative magnitude becomes consistently small
-        stab_idx = -1
-        threshold = 0.001
-        
-        for i in range(len(deriv)):
-            # Check if all subsequent derivatives are small
-            if np.all(np.abs(deriv[i:i+100]) < threshold):
-                stab_idx = i + window_size // 2
-                break
-                
-        if stab_idx != -1:
-            plt.axvline(x=stab_idx, color='r', linestyle='--', label=f'Stabilization ~ {stab_idx}')
-            print(f"Stabilization detected at iteration {stab_idx}")
-        else:
-            print("Stabilization point not clearly found based on derivative.")
-            
-        # Plot moving average as well
-        plt.plot(range(window_size-1, len(va_list)), moving_avg, color='orange', label='Moving Avg', linewidth=2)
+    plt.ylim(0, 1)
 
-    plt.legend()
-    plt.savefig('va_vs_time.png', dpi=300)
+    # Leyenda afuera del gráfico
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
+
+    # Ajustar layout para que no se corte la leyenda
+    plt.tight_layout()
+
+    plt.savefig('va_vs_time.png', dpi=300, bbox_inches='tight')
     print("Saved plot to va_vs_time.png")
+
+    plt.show()
 
 if __name__ == "__main__":
     main()

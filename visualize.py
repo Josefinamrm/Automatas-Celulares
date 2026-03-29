@@ -59,7 +59,7 @@ L = 10.0
 ax.set_xlim(0, L)
 ax.set_ylim(0, L)
 ax.set_aspect('equal')
-ax.set_title("Off-Lattice Automata")
+# ax.set_title("Off-Lattice Automata")
 
 # Initialize with first frame to avoid length mismatch issues in matplotlib Quirver
 init_data = frames[0]
@@ -83,8 +83,18 @@ def update(frame_idx):
     quiver.set_color(['blue' if c == 1 else 'red' for c in is_leader])
     quiver.set_UVC(vx*10, vy*10)
     
-    ax.set_title(f"Time Step {frame_idx} (N={len(x)})")
+    # ax.set_title(f"Iteración {frame_idx} (N={len(x)})")
     return quiver,
 
 ani = animation.FuncAnimation(fig, update, frames=len(frames), init_func=init, blit=True, interval=100)
-plt.show()
+# Guardar animación como MP4
+output_file = "simulacion.mp4"
+
+Writer = animation.FFMpegWriter
+writer = Writer(fps=60, metadata=dict(artist='Me'), bitrate=1800)
+
+ani.save(output_file, writer=writer)
+
+print(f"Animación guardada como {output_file}")
+
+plt.show() 

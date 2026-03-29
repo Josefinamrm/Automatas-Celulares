@@ -1,18 +1,13 @@
 """
 benchmark_comparison.py
 ========================
-Ubicar en /root (misma altura que /java, visualize.py, plot_va.py, etc.)
-
-Lee los resultados generados por run_all_scenarios.sh y produce:
-  - va_vs_eta_comparison.png  → curva comparativa de los 3 escenarios (ítem c/d)
-
-Estructura esperada de resultados:
-  results/
-    no_leader/eta_0.0/run_1/particles_frames.txt
-    fixed_leader/eta_0.5/run_1/particles_frames.txt
-    circle_leader/eta_1.0/run_1/particles_frames.txt
-    ...
+Genera:
+  - va_vs_eta_comparison.png
+  - va_vs_eta_no_leader.png
+  - va_vs_eta_fixed_leader.png
+  - va_vs_eta_circle_leader.png
 """
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -40,7 +35,7 @@ STYLES = {
     "Líder circular": {"color": "seagreen",   "marker": "^", "ls": "-."},
 }
 
-# ──────────────────────────── FUNCIONES ───────────────────────────────────── #
+# ─────────────────────────── FUNCIONES ───────────────────────────────────── #
 
 def compute_va_series(filepath):
     va_list = []
@@ -115,6 +110,7 @@ def collect_scenario(folder, eta_values, n_runs, transient):
             continue
 
         etas.append(eta)
+
         if len(run_means) == 1:
             _, s = steady_state(last_series, transient)
             means.append(run_means[0])
@@ -126,6 +122,8 @@ def collect_scenario(folder, eta_values, n_runs, transient):
     return np.array(etas), np.array(means), np.array(stds)
 
 
+# ──────────────── GRAFICO COMPARATIVO ───────────────── #
+
 def plot_comparison(results, outfile="va_vs_eta_comparison.png"):
     fig, ax = plt.subplots(figsize=(10, 6))
 
@@ -136,23 +134,67 @@ def plot_comparison(results, outfile="va_vs_eta_comparison.png"):
         st = STYLES[label]
         ax.errorbar(etas, means, yerr=stds*10,
                     label=label,
-                    color=st["color"], marker=st["marker"], linestyle=st["ls"],
-                    capsize=5, linewidth=1.8, markersize=6)
+                    color=st["color"],
+                    marker=st["marker"],
+                    linestyle=st["ls"],
+                    capsize=5,
+                    linewidth=1.8,
+                    markersize=6)
 
     ax.set_xlabel(r"$\eta$ (ruido)", fontsize=13)
     ax.set_ylabel(r"$v_a$ (polarización)", fontsize=13)
     ax.set_title(r"Parámetro de orden $v_a$ vs $\eta$ — Comparación de escenarios", fontsize=13)
+
     ax.set_xlim(-0.1, max(ETA_VALUES) + 0.2)
     ax.set_ylim(0.0, 1.05)
+
     ax.legend(fontsize=11)
     ax.grid(True, alpha=0.4)
+
     fig.tight_layout()
     fig.savefig(outfile, dpi=150)
     plt.close(fig)
+
     print(f"Gráfico guardado: {outfile}")
 
 
-# ──────────────────────────────── MAIN ───────────────────────────────────────
+# ──────────────── GRAFICO INDIVIDUAL ───────────────── #
+
+def plot_single_scenario(label, etas, means, stds, outfile):
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    if len(etas) == 0:
+        print(f"[WARN] Sin datos para '{label}'")
+        return
+
+    st = STYLES[label]
+
+    ax.errorbar(etas, means, yerr=stds*10,
+                label=label,
+                color=st["color"],
+                marker=st["marker"],
+                linestyle=st["ls"],
+                capsize=5,
+                linewidth=1.8,
+                markersize=6)
+
+    ax.set_xlabel(r"$\eta$ (ruido)", fontsize=13)
+    ax.set_ylabel(r"$v_a$ (polarización)", fontsize=13)
+    ax.set_title(f"{label}: $v_a$ vs $\\eta$", fontsize=13)
+
+    ax.set_xlim(-0.1, max(ETA_VALUES) + 0.2)
+    ax.set_ylim(0.0, 1.05)
+
+    ax.grid(True, alpha=0.4)
+
+    fig.tight_layout()
+    fig.savefig(outfile, dpi=150)
+    plt.close(fig)
+
+    print(f"Gráfico guardado: {outfile}")
+
+
+# ───────────────────────── MAIN ───────────────────────── #
 
 def main():
     print("=" * 60)
@@ -165,11 +207,17 @@ def main():
         print(f"\n[{label}]  carpeta: {folder}")
         etas, means, stds = collect_scenario(folder, ETA_VALUES, N_RUNS, TRANSIENT)
         results[label] = (etas, means, stds)
+
         for e, m, s in zip(etas, means, stds):
             print(f"  eta={e:.1f}  va={m:.4f} ± {s:.4f}")
 
-    print("\nGenerando gráfico...")
+        # 👇 gráfico individual
+        outfile = f"va_vs_eta_{folder}.png"
+        plot_single_scenario(label, etas, means, stds, outfile)
+
+    print("\nGenerando gráfico comparativo...")
     plot_comparison(results)
+
     print("Listo.")
 
 

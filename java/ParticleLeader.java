@@ -7,14 +7,15 @@ public class ParticleLeader extends Particle {
     private double orbitAngle = 0.0;
     private boolean circleLeader;
 
-    public ParticleLeader(int id, double x, double y, double theta, double radius, double property, boolean isLeader, boolean circleLeader) {
+    public ParticleLeader(int id, double x, double y, double theta, double radius, double property, boolean isLeader,
+            boolean circleLeader) {
         super(id, x, y, theta, radius, property, isLeader);
         this.circleLeader = circleLeader;
     }
 
     @Override
     public void calculateNextTheta(double eta, java.util.Random rand) {
-        // The leader ignores neighbors and maintains its absolute orbit.
+        // lider ignora al resto
     }
 
     @Override
@@ -25,7 +26,6 @@ public class ParticleLeader extends Particle {
             double newX = CENTER_X + ORBIT_RADIUS * Math.cos(orbitAngle);
             double newY = CENTER_Y + ORBIT_RADIUS * Math.sin(orbitAngle);
 
-            // Update the velocity vector direction for exportFrame (tangent to orbit)
             setTheta(orbitAngle + Math.PI / 2);
 
             if (periodic) {

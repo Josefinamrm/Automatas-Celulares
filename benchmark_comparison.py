@@ -132,7 +132,7 @@ def plot_comparison(results, outfile="va_vs_eta_comparison.png"):
             print(f"  [WARN] Sin datos para '{label}'")
             continue
         st = STYLES[label]
-        ax.errorbar(etas, means, yerr=stds*10,
+        ax.errorbar(etas, means, yerr=stds,
                     label=label,
                     color=st["color"],
                     marker=st["marker"],
@@ -169,7 +169,7 @@ def plot_single_scenario(label, etas, means, stds, outfile):
 
     st = STYLES[label]
 
-    ax.errorbar(etas, means, yerr=stds*10,
+    ax.errorbar(etas, means, yerr=stds,
                 label=label,
                 color=st["color"],
                 marker=st["marker"],

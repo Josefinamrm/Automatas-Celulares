@@ -67,8 +67,14 @@ init_data = frames[0]
 colors = ['blue' if c == 1 else 'red' for c in init_data[:, 5]]
 quiver = ax.quiver(init_data[:, 0], init_data[:, 1], init_data[:, 2]*10, init_data[:, 3]*10, color=colors, scale=1.0, scale_units='xy', angles='xy', headwidth=3, headlength=4, zorder=1)
 
+# Crear círculos para líderes
+leader_indices = [i for i in range(len(init_data)) if init_data[i, 5] == 1]
+circles = [plt.Circle((init_data[i, 0], init_data[i, 1]), 1, fill=False, color='blue', linewidth=2, linestyle=':') for i in leader_indices]
+for c in circles:
+    ax.add_patch(c)
+
 def init():
-    return quiver,
+    return quiver, *circles
 
 def update(frame_idx):
     data = frames[frame_idx]
@@ -83,8 +89,14 @@ def update(frame_idx):
     quiver.set_color(['blue' if c == 1 else 'red' for c in is_leader])
     quiver.set_UVC(vx*10, vy*10)
     
+    # Actualizar posiciones de círculos para líderes
+    current_leaders = [i for i in range(len(data)) if is_leader[i] == 1]
+    for idx, i in enumerate(current_leaders):
+        if idx < len(circles):
+            circles[idx].center = (x[i], y[i])
+    
     # ax.set_title(f"Iteración {frame_idx} (N={len(x)})")
-    return quiver,
+    return quiver, *circles
 
 ani = animation.FuncAnimation(fig, update, frames=len(frames), init_func=init, blit=True, interval=100)
 # Guardar animación como MP4

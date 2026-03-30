@@ -12,7 +12,7 @@
 #   results/circle_leader/eta_X.X/run_Y/particles_frames.txt
 
 # ─────────────────── PARÁMETROS ──────────────────────────────────────────── #
-N=400           # rho=4, L=10 → N = 4 * 10^2 = 400
+N=800           # rho=4, L=10 → N = 4 * 10^2 = 400
 L=10
 M=5
 RC=1.0
@@ -22,7 +22,7 @@ N_RUNS=3        # repeticiones por eta para barras de error
 
 LEADER_ID=0
 
-ETA_VALUES=(0.0 0.1 0.2 0.3 0.5 0.7 0.8 0.9 1.0 1.5 2.0 2.5 3.0 4.0 5.0)
+ETA_VALUES=(0.0 0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0)
 # ─────────────────────────────────────────────────────────────────────────── #
 
 ROOT_DIR="$(pwd)"          # /root

@@ -9,14 +9,16 @@ import java.util.Scanner;
 
 public class App {
     public static void main(String[] args) {
-        
+
         if (args.length < 5) {
-            System.err.println("HELP (File Mode): java -cp src App <StaticPath> <DynamicPath> <M> <rc> <periodic (true/false)> [iterations] [eta]");
-            System.err.println("HELP (Random Mode): java -cp src App <N> <L> <M> <rc> <periodic (true/false)> [iterations] [eta]");
+            System.err.println(
+                    "HELP (File Mode): java -cp src App <StaticPath> <DynamicPath> <M> <rc> <periodic (true/false)> [iterations] [eta]");
+            System.err.println(
+                    "HELP (Random Mode): java -cp src App <N> <L> <M> <rc> <periodic (true/false)> [iterations] [eta]");
             System.exit(1);
         }
 
-        //recibimos los parametros desde la terminal, al correr run.sh
+        // recibimos los parametros desde la terminal, al correr run.sh
         int M = Integer.parseInt(args[2]);
         double rc = Double.parseDouble(args[3]);
         boolean periodic = Boolean.parseBoolean(args[4]);
@@ -26,15 +28,15 @@ public class App {
         boolean circleLeader = false;
         int leaderID = 0;
 
-        if(args.length > 7){
+        if (args.length > 7) {
             hasLeader = Boolean.parseBoolean(args[7]);
         }
-        
-        if(args.length > 8){
+
+        if (args.length > 8) {
             leaderID = Integer.parseInt(args[8]);
         }
 
-        if(args.length > 9){
+        if (args.length > 9) {
             circleLeader = Boolean.parseBoolean(args[9]);
         }
 
@@ -44,7 +46,7 @@ public class App {
 
         boolean isRandomMode = false;
         try {
-            //tmb parametros desde la terminal, en este caso serian números fijos
+            // tmb parametros desde la terminal, en este caso serian números fijos
             N = Integer.parseInt(args[0]);
             L = Double.parseDouble(args[1]);
             isRandomMode = true;
@@ -54,14 +56,15 @@ public class App {
 
         if (isRandomMode) {
             System.out.println("Running in Random Mode...");
-            //los limites marcados en el tp1
+            // los limites marcados en el tp1
             double r_min = 0.23;
             double r_max = 0.26;
             double property = 1.0;
             double theta = 0.0;
             java.util.Random rand = new java.util.Random();
 
-            //le inventamos posiciones y radios a las N partículas q pedimos, chequeando que no se superpongan entre si.
+            // le inventamos posiciones y radios a las N partículas q pedimos, chequeando
+            // que no se superpongan entre si.
             for (int i = 0; i < N; i++) {
                 boolean overlaps;
                 double rx, ry, radius;
@@ -94,7 +97,7 @@ public class App {
                     attempts++;
                 } while (overlaps && attempts < 10000);
 
-                if(hasLeader && i == leaderID){
+                if (hasLeader && i == leaderID) {
                     particles.add(new ParticleLeader(i, rx, ry, theta, radius, property, true, circleLeader));
                 } else {
                     particles.add(new Particle(i, rx, ry, theta, radius, property, false));
@@ -102,7 +105,7 @@ public class App {
             }
         } else {
             System.out.println("Running in File Mode...");
-            //tmb desde la terminal, en este caso serian archivos
+            // tmb desde la terminal, en este caso serian archivos
             String staticPath = args[0];
             String dynamicPath = args[1];
 
@@ -122,9 +125,10 @@ public class App {
 
                     double rx = Double.parseDouble(dynamicParts[0]);
                     double ry = Double.parseDouble(dynamicParts[1]);
-                    double theta =  Double.parseDouble(dynamicParts[2]);//TODO, por ahora no existe en los archivos
+                    double theta = Double.parseDouble(dynamicParts[2]);// TODO, por ahora no existe en los archivos
 
-                    //en este caso no se hacen todos los chequeos como en el anterior porq se asume q los archivos son correctos TODO
+                    // en este caso no se hacen todos los chequeos como en el anterior porq se asume
+                    // q los archivos son correctos TODO
                     particles.add(new Particle(i, rx, ry, theta, radius, property, false));
                 }
 
@@ -145,32 +149,29 @@ public class App {
             System.exit(1);
         }
 
-        //Ejecuta Cell Index Method para calcular los vecinos
+        // Ejecuta Cell Index Method para calcular los vecinos
         automataCelular(particles, L, M, rc, periodic, iterations, eta, circleLeader);
     }
 
-    public static void automataCelular(ArrayList<Particle> particles, double L, int M, double rc, boolean periodic, int iterations, double eta, boolean circleLeader) {
+    public static void automataCelular(ArrayList<Particle> particles, double L, int M, double rc, boolean periodic,
+            int iterations, double eta, boolean circleLeader) {
         java.util.Random rand = new java.util.Random();
         System.out.println("Starting simulation for " + iterations + " iterations...");
 
         exportFrame(0, particles, L); // Exportamos el estado inicial verdadero
 
         for (int t = 1; t <= iterations; t++) {
-            // 1. Calculate neighbours
             cellIndexMethod(particles, L, M, rc, periodic);
 
-            // 2. Calculate next theta for all particles
             for (Particle p : particles) {
                 p.calculateNextTheta(eta, rand);
             }
 
-            // 3. Update theta and positions
             for (Particle p : particles) {
                 p.updateTheta();
                 p.updatePosition(L, periodic);
             }
 
-            // Export frame (append to particles.txt or generate a file per frame)
             exportFrame(t, particles, L);
         }
         System.out.println("Simulation finished.");
@@ -190,7 +191,8 @@ public class App {
         return Math.sqrt(dx * dx + dy * dy) - p1.getRadius() - p2.getRadius();
     }
 
-    //se usa en benchmark.java para comparar tiempos de ejecución entre ambos métodos
+    // se usa en benchmark.java para comparar tiempos de ejecución entre ambos
+    // métodos
     public static long bruteForce(ArrayList<Particle> particles, double L, double rc, boolean periodic) {
         for (Particle p : particles)
             p.clearNeighbours();
@@ -273,7 +275,7 @@ public class App {
                                 // consigo misma
                                 if (p1.getId() < p2.getId()) {
                                     if (getDistance(p1, p2, L, periodic) <= rc) {
-                                        //ahorramos iteraciones al agregar a ambos vecinos entre si al mismo tiempo
+                                        // ahorramos iteraciones al agregar a ambos vecinos entre si al mismo tiempo
                                         p1.addNeighbour(p2);
                                         p2.addNeighbour(p1);
                                     }
@@ -294,10 +296,11 @@ public class App {
         try (FileWriter writer = new FileWriter("../particles_frames.txt", true)) {
             writer.write(particles.size() + "\n");
             writer.write("Frame " + t + "\n");
-            // Format for ovito or custom visualization
             for (Particle p : particles) {
                 int leaderFlag = p.isLeader() ? 1 : 0;
-                writer.write(p.getId() + " " + p.getX() + " " + p.getY() + " " + Math.cos(p.getTheta()) * Particle.VELOCITY + " " + Math.sin(p.getTheta()) * Particle.VELOCITY + " " + p.getRadius() + " " + leaderFlag + "\n");
+                writer.write(p.getId() + " " + p.getX() + " " + p.getY() + " "
+                        + Math.cos(p.getTheta()) * Particle.VELOCITY + " " + Math.sin(p.getTheta()) * Particle.VELOCITY
+                        + " " + p.getRadius() + " " + leaderFlag + "\n");
             }
         } catch (IOException e) {
             e.printStackTrace();
